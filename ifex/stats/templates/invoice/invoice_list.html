@@ -1,0 +1,1621 @@
+{% extends "base.html" %}
+
+{% block title %}Invoices List - IFEX PR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        text-align: center;
+        position: relative;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card.blue { border-left: 4px solid var(--accent-blue); }
+    .stat-card.green { border-left: 4px solid var(--accent-green); }
+    .stat-card.orange { border-left: 4px solid var(--accent-orange); }
+    .stat-card.purple { border-left: 4px solid #8b5cf6; }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        line-height: 1;
+    }
+    
+    .stat-label {
+        color: var(--text-gray);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.1;
+        position: absolute;
+        top: 16px;
+        right: 16px;
+    }
+    
+    .page-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    
+    .search-filter {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .search-input {
+        max-width: 300px;
+        position: relative;
+    }
+    
+    .search-input input {
+        padding-left: 40px;
+        padding-right: 16px;
+        height: 44px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input input:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+    
+    .search-input i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-gray);
+    }
+    
+    .filter-select {
+        height: 44px;
+        padding: 0 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: white;
+        min-width: 150px;
+    }
+    
+    .create-invoice-btn {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .create-invoice-btn:hover {
+        background: #059669;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        text-decoration: none;
+    }
+
+    /* Desktop Table View */
+    .table-view {
+        display: block;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .enhanced-table {
+        margin: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .enhanced-table th {
+        background: var(--light-gray);
+        color: var(--text-dark);
+        font-weight: 600;
+        padding: 16px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        cursor: pointer;
+    }
+    
+    .enhanced-table th:hover {
+        background: #e5e7eb;
+    }
+    
+    .enhanced-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+    
+    .enhanced-table tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .enhanced-table tbody tr:hover {
+        background-color: rgba(16, 185, 129, 0.02);
+    }
+    
+    .enhanced-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Mobile Card View */
+    .card-view {
+        display: none;
+    }
+    
+    .invoices-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+    }
+    
+    .invoice-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        position: relative;
+        border-left: 4px solid var(--accent-green);
+    }
+    
+    .invoice-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-left-color: #059669;
+    }
+    
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .invoice-number-card {
+        font-family: 'Courier New', monospace;
+        background: linear-gradient(135deg, var(--accent-green), #059669);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+    
+    .card-status {
+        align-self: flex-start;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .card-body {
+        margin-bottom: 20px;
+    }
+    
+    .card-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 8px 0;
+    }
+    
+    .info-label {
+        color: var(--text-gray);
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .info-value {
+        color: var(--text-dark);
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+    
+    .info-value.amount {
+        color: var(--accent-green);
+        font-family: 'Courier New', monospace;
+        background: rgba(16, 185, 129, 0.1);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .info-value.customer {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+    
+    .info-value.quotation {
+        color: var(--accent-blue);
+        font-family: 'Courier New', monospace;
+        background: rgba(59, 130, 246, 0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .card-action-btn {
+        padding: 10px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid;
+    }
+    
+    .card-action-btn.primary {
+        background: var(--accent-blue);
+        color: white;
+        border-color: var(--accent-blue);
+    }
+    
+    .card-action-btn.primary:hover {
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .card-action-btn.success {
+        background: var(--accent-green);
+        color: white;
+        border-color: var(--accent-green);
+    }
+    
+    .card-action-btn.success:hover {
+        background: #059669;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+    
+    .card-action-btn.outline {
+        background: transparent;
+        color: var(--text-gray);
+        border-color: var(--border-color);
+    }
+    
+    .card-action-btn.outline:hover {
+        background: var(--light-gray);
+        color: var(--text-dark);
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    
+    .card-action-btn.warning {
+        background: var(--accent-orange);
+        color: white;
+        border-color: var(--accent-orange);
+    }
+    
+    .card-action-btn.warning:hover {
+        background: #d97706;
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+    }
+    
+    /* Table Styling (Desktop) */
+    .invoice-number {
+        font-family: 'Courier New', monospace;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .quotation-ref {
+        font-family: 'Courier New', monospace;
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .customer-name {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    .amount {
+        font-weight: 600;
+        color: var(--accent-green);
+        font-family: 'Courier New', monospace;
+    }
+    
+    .amount.total {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    .date-display {
+        color: var(--text-gray);
+        font-size: 0.85rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    .action-btn.view {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--accent-blue);
+    }
+    
+    .action-btn.view:hover {
+        background: var(--accent-blue);
+        color: white;
+    }
+    
+    .action-btn.edit {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--accent-green);
+    }
+    
+    .action-btn.edit:hover {
+        background: var(--accent-green);
+        color: white;
+    }
+    
+    .action-btn.pdf {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+    
+    .action-btn.pdf:hover {
+        background: #dc2626;
+        color: white;
+    }
+    
+    .action-btn.delivery {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--accent-orange);
+    }
+    
+    .action-btn.delivery:hover {
+        background: var(--accent-orange);
+        color: white;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-gray);
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        opacity: 0.3;
+        margin-bottom: 16px;
+    }
+    
+    .empty-state h3 {
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        
+        .page-actions {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+        }
+        
+        .search-filter {
+            flex-direction: column;
+        }
+        
+        .search-input {
+            max-width: none;
+        }
+        
+        .create-invoice-btn {
+            align-self: center;
+        }
+    }
+    
+    /* Mobile View - Cards */
+    @media (max-width: 768px) {
+        .table-view {
+            display: none;
+        }
+        
+        .card-view {
+            display: block;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 20px;
+        }
+        
+        .invoice-card {
+            padding: 16px;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .card-status {
+            align-self: flex-end;
+        }
+        
+        .card-actions {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .card-action-btn {
+            padding: 12px;
+            font-size: 0.9rem;
+        }
+        
+        .info-label {
+            font-size: 0.8rem;
+        }
+        
+        .info-value {
+            font-size: 0.85rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+        
+        .stat-card {
+            padding: 16px;
+        }
+        
+        .invoice-card {
+            padding: 14px;
+        }
+        
+        .invoice-number-card {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .invoice-card, .enhanced-table tbody tr {
+        animation: fadeInUp 0.3s ease-out;
+    }
+    
+    .invoice-card:nth-child(1) { animation-delay: 0.1s; }
+    .invoice-card:nth-child(2) { animation-delay: 0.15s; }
+    .invoice-card:nth-child(3) { animation-delay: 0.2s; }
+    .invoice-card:nth-child(4) { animation-delay: 0.25s; }
+    .invoice-card:nth-child(5) { animation-delay: 0.3s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-file-invoice-dollar"></i>
+        Invoices Management
+    </h1>
+    <p class="page-subtitle">
+        Manage and track all your business invoices
+    </p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <div class="stat-value">{{ invoices|length }}</div>
+        <div class="stat-label">Total Invoices</div>
+        <i class="fas fa-file-invoice-dollar stat-icon"></i>
+    </div>
+    <div class="stat-card green">
+        <div class="stat-value">
+            {% widthratio invoices|length 1 1 %}
+        </div>
+        <div class="stat-label">This Month</div>
+        <i class="fas fa-calendar-check stat-icon"></i>
+    </div>
+    <div class="stat-card orange">
+        <div class="stat-value">
+            AED
+            {{ total_revenue|floatformat:2 }}
+        </div>
+        <div class="stat-label">Total Revenue this month</div>
+        <i class="fas fa-money-bill-wave stat-icon"></i>
+    </div>
+    <!-- <div class="stat-card purple">
+        <div class="stat-value">
+            AED {% if invoices %}{{ invoices.0.grand_total|floatformat:0 }}{% else %}0{% endif %}
+        </div>
+        <div class="stat-label">Avg. Invoice Value</div>
+        <i class="fas fa-chart-line stat-icon"></i>
+    </div> -->
+</div>
+
+<!-- Page Actions -->
+<div class="page-actions">
+    <div class="search-filter">
+        <div class="search-input">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search invoices..." onkeyup="filterInvoices()">
+        </div>
+        <select class="filter-select" id="dateFilter" onchange="filterInvoices()">
+            <option value="">All Dates</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+        </select>
+    </div>
+    <a href="{% url 'create_invoice_dropdown' %}" class="create-invoice-btn">
+        <i class="fas fa-plus"></i>
+        Create Invoice
+    </a>
+</div>
+
+<!-- Desktop Table View -->
+<div class="table-view">
+    <div class="table-container">
+        {% if invoices %}
+            <table class="enhanced-table" id="invoicesTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, 'string')">Invoice No <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(1, 'string')">Customer <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(2, 'string')">Quotation <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(3, 'date')">Date <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(4, 'number')">Total Amount <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(5, 'number')">Grand Total <i class="fas fa-sort"></i></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr data-customer="{{ invoice.customer.name|lower }}" 
+                        data-invoice="{{ invoice.invoice_number|lower }}"
+                        data-date="{{ invoice.invoice_date|date:'Y-m-d' }}">
+                        <td>
+                            <span class="invoice-number">{{ invoice.invoice_number }}</span>
+                        </td>
+                        <td>
+                            <span class="customer-name">{{ invoice.customer.name }}</span>
+                        </td>
+                        <td>
+                            <span class="quotation-ref">{{ invoice.quotation.quotation_number }}</span>
+                        </td>
+                        <td>
+                            <span class="date-display">{{ invoice.invoice_date|date:"M d, Y" }}</span>
+                        </td>
+                        <td>
+                            <span class="amount">AED {{ invoice.total_amount|floatformat:2 }}</span>
+                        </td>
+                        <td>
+                            <span class="amount total">AED {{ invoice.grand_total|floatformat:2 }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{% url 'invoice_detail' invoice.id %}" 
+                                   class="action-btn view" 
+                                   title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'edit_invoice' invoice.id %}" 
+                                   class="action-btn edit" 
+                                   title="Edit Invoice">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'invoice_pdf' invoice.id %}" 
+                                   class="action-btn pdf" 
+                                   title="Download PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                <a href="{% url 'do_pdf' invoice.id %}" 
+                                   class="action-btn delivery" 
+                                   title="Delivery Order">
+                                    <i class="fas fa-truck"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <h3>No Invoices Found</h3>
+                <p>Create your first invoice from an existing quotation</p>
+                <a href="{% url 'create_invoice_dropdown' %}" class="create-invoice-btn" style="margin-top: 16px;">
+                    <i class="fas fa-plus"></i>
+                    Create First Invoice
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Mobile Card View -->
+<div class="card-view">
+    {% if invoices %}
+        <div class="invoices-grid" id="invoicesGrid">
+            {% for invoice in invoices %}
+            <div class="invoice-card" 
+                 data-customer="{{ invoice.customer.name|lower }}" 
+                 data-invoice="{{ invoice.invoice_number|lower }}"
+                 data-date="{{ invoice.invoice_date|date:'Y-m-d' }}">
+                
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="invoice-number-card">{{ invoice.invoice_number }}</div>
+                    <div class="card-status">
+                        <span class="status-badge">
+                            <i class="fas fa-check-circle"></i> Invoiced
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body">
+                    <div class="card-info-row">
+                        <div class="info-label">
+                            <i class="fas fa-user"></i> Customer
+                        </div>
+                        <div class="info-value customer">{{ invoice.customer.name }}</div>
+                    </div>
+                    
+                    <div class="card-info-row">
+                        <div class="info-label">
+                            <i class="fas fa-file-invoice"></i> Quotation
+                        </div>
+                        <div class="info-value quotation">{{ invoice.quotation.quotation_number }}</div>
+                    </div>
+                    
+                    <div class="card-info-row">
+                        <div class="info-label">
+                            <i class="fas fa-calendar"></i> Invoice Date
+                        </div>
+                        <div class="info-value">{{ invoice.invoice_date|date:"M d, Y" }}</div>
+                    </div>
+                    
+                    <div class="card-info-row">
+                        <div class="info-label">
+                            <i class="fas fa-dollar-sign"></i> Total Amount
+                        </div>
+                        <div class="info-value">AED {{ invoice.total_amount|floatformat:2 }}</div>
+                    </div>
+                    
+                    <div class="card-info-row">
+                        <div class="info-label">
+                            <i class="fas fa-money-bill-wave"></i> <strong>Grand Total</strong>
+                        </div>
+                        <div class="info-value amount"><strong>AED {{ invoice.grand_total|floatformat:2 }}</strong></div>
+                    </div>
+                </div>
+                
+                <!-- Card Actions -->
+                <div class="card-actions">
+                    <a href="{% url 'invoice_detail' invoice.id %}" class="card-action-btn primary">
+                        <i class="fas fa-eye"></i> View
+                    </a>
+                    <a href="{% url 'edit_invoice' invoice.id %}" class="card-action-btn success">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{% url 'invoice_pdf' invoice.id %}" class="card-action-btn warning">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{% url 'do_pdf' invoice.id %}" class="card-action-btn outline">
+                        <i class="fas fa-truck"></i> Delivery Order
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <h3>No Invoices Found</h3>
+            <p>Create your first invoice from an existing quotation</p>
+            <a href="{% url 'create_invoice_dropdown' %}" class="create-invoice-btn" style="margin-top: 16px;">
+                <i class="fas fa-plus"></i>
+                Create First Invoice
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let currentSortColumn = -1;
+let currentSortDirection = 'asc';
+
+// Filter invoices function
+function filterInvoices() {
+    const searchInput = document.getElementById('searchInput');
+    const dateFilter = document.getElementById('dateFilter');
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const dateValue = dateFilter.value.toLowerCase();
+    
+    // Get current date for filtering
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentWeek = getWeekNumber(today);
+    
+    // Filter table view (desktop)
+    const tableRows = document.querySelectorAll('#invoicesTable tbody tr');
+    tableRows.forEach(row => {
+        const invoiceNumber = row.getAttribute('data-invoice');
+        const customerName = row.getAttribute('data-customer');
+        const invoiceDate = new Date(row.getAttribute('data-date'));
+        
+        const matchesSearch = invoiceNumber.includes(searchTerm) || 
+                            customerName.includes(searchTerm);
+        
+        let matchesDate = true;
+        if (dateValue !== '') {
+            switch(dateValue) {
+                case 'today':
+                    matchesDate = isSameDay(invoiceDate, today);
+                    break;
+                case 'week':
+                    matchesDate = getWeekNumber(invoiceDate) === currentWeek && 
+                                 invoiceDate.getFullYear() === currentYear;
+                    break;
+                case 'month':
+                    matchesDate = invoiceDate.getMonth() === currentMonth && 
+                                 invoiceDate.getFullYear() === currentYear;
+                    break;
+                case 'year':
+                    matchesDate = invoiceDate.getFullYear() === currentYear;
+                    break;
+            }
+        }
+        
+        if (matchesSearch && matchesDate) {
+            row.style.display = '';
+            row.style.animation = 'fadeInUp 0.3s ease-out';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Filter card view (mobile)
+    const cards = document.querySelectorAll('.invoice-card');
+    cards.forEach(card => {
+        const invoiceNumber = card.getAttribute('data-invoice');
+        const customerName = card.getAttribute('data-customer');
+        const invoiceDate = new Date(card.getAttribute('data-date'));
+        
+        const matchesSearch = invoiceNumber.includes(searchTerm) || 
+                            customerName.includes(searchTerm);
+        
+        let matchesDate = true;
+        if (dateValue !== '') {
+            switch(dateValue) {
+                case 'today':
+                    matchesDate = isSameDay(invoiceDate, today);
+                    break;
+                case 'week':
+                    matchesDate = getWeekNumber(invoiceDate) === currentWeek && 
+                                 invoiceDate.getFullYear() === currentYear;
+                    break;
+                case 'month':
+                    matchesDate = invoiceDate.getMonth() === currentMonth && 
+                                 invoiceDate.getFullYear() === currentYear;
+                    break;
+                case 'year':
+                    matchesDate = invoiceDate.getFullYear() === currentYear;
+                    break;
+            }
+        }
+        
+        if (matchesSearch && matchesDate) {
+            card.style.display = '';
+            card.style.animation = 'fadeInUp 0.3s ease-out';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Update stats based on filtered results
+    updateFilteredStats();
+}
+
+// Sort table function
+function sortTable(columnIndex, dataType = 'string') {
+    const table = document.getElementById('invoicesTable');
+    if (!table) return;
+    
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+    
+    // Toggle sort direction
+    if (currentSortColumn === columnIndex) {
+        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortDirection = 'asc';
+        currentSortColumn = columnIndex;
+    }
+    
+    rows.sort((a, b) => {
+        const aValue = a.getElementsByTagName('td')[columnIndex].textContent.trim();
+        const bValue = b.getElementsByTagName('td')[columnIndex].textContent.trim();
+        
+        let comparison = 0;
+        
+        if (dataType === 'number') {
+            const aNum = parseFloat(aValue.replace(/[^0-9.-]/g, ''));
+            const bNum = parseFloat(bValue.replace(/[^0-9.-]/g, ''));
+            comparison = aNum - bNum;
+        } else if (dataType === 'date') {
+            const aDate = new Date(aValue);
+            const bDate = new Date(bValue);
+            comparison = aDate - bDate;
+        } else {
+            comparison = aValue.localeCompare(bValue);
+        }
+        
+        return currentSortDirection === 'asc' ? comparison : -comparison;
+    });
+    
+    // Reorder rows in the table
+    rows.forEach(row => tbody.appendChild(row));
+    
+    // Update sort indicators
+    updateSortIndicators(columnIndex, currentSortDirection);
+}
+
+// Update sort indicators
+function updateSortIndicators(activeColumn, direction) {
+    const headers = document.querySelectorAll('#invoicesTable th');
+    headers.forEach((header, index) => {
+        const sortIcon = header.querySelector('i');
+        if (sortIcon) {
+            if (index === activeColumn) {
+                sortIcon.className = `fas fa-sort-${direction === 'asc' ? 'up' : 'down'}`;
+                sortIcon.style.color = 'var(--accent-blue)';
+            } else {
+                sortIcon.className = 'fas fa-sort';
+                sortIcon.style.color = 'var(--text-gray)';
+            }
+        }
+    });
+}
+
+// Update filtered statistics
+function updateFilteredStats() {
+    const visibleTableRows = Array.from(document.querySelectorAll('#invoicesTable tbody tr')).filter(row => 
+        row.style.display !== 'none'
+    );
+    const visibleCards = Array.from(document.querySelectorAll('.invoice-card')).filter(card => 
+        card.style.display !== 'none'
+    );
+    
+    // Use whichever view is currently active
+    const visibleItems = window.innerWidth <= 768 ? visibleCards : visibleTableRows;
+    const totalVisible = visibleItems.length;
+    
+    // Optional: Update stat cards to reflect filtered results
+    // You can implement this if needed
+}
+
+// Utility date functions
+function isSameDay(date1, date2) {
+    return date1.getDate() === date2.getDate() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getFullYear() === date2.getFullYear();
+}
+
+function getWeekNumber(date) {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+    const week1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+}
+
+// Handle responsive view changes
+function handleViewportChange() {
+    const tableView = document.querySelector('.table-view');
+    const cardView = document.querySelector('.card-view');
+    
+    if (window.innerWidth <= 768) {
+        // Mobile view - cards
+        if (tableView) tableView.style.display = 'none';
+        if (cardView) cardView.style.display = 'block';
+    } else {
+        // Desktop view - table
+        if (tableView) tableView.style.display = 'block';
+        if (cardView) cardView.style.display = 'none';
+    }
+    
+    // Reapply any active filters
+    if (document.getElementById('searchInput').value || document.getElementById('dateFilter').value) {
+        filterInvoices();
+    }
+}
+
+// Initialize page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Show success message if invoice was just created
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('created') === 'true') {
+        showNotification('Invoice created successfully!', 'success');
+    }
+    if (urlParams.get('updated') === 'true') {
+        showNotification('Invoice updated successfully!', 'success');
+    }
+    
+    // Initialize search with debounce
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(filterInvoices, 300);
+        });
+    }
+    
+    // Initialize date filter
+    const dateFilter = document.getElementById('dateFilter');
+    if (dateFilter) {
+        dateFilter.addEventListener('change', filterInvoices);
+    }
+    
+    // Add click handlers for sortable table headers
+    const sortableHeaders = document.querySelectorAll('#invoicesTable th[onclick]');
+    sortableHeaders.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.setAttribute('title', 'Click to sort');
+        
+        header.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e5e7eb';
+        });
+        
+        header.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+    
+    // Initialize card interactions
+    initializeCardInteractions();
+    
+    // Set initial view based on screen size
+    handleViewportChange();
+    
+    // Listen for viewport changes
+    window.addEventListener('resize', debounce(handleViewportChange, 250));
+    
+    // Initialize action buttons with loading states
+    initializeActionButtons();
+    
+    // Initialize stats animation
+    animateStats();
+});
+
+// Initialize card interactions
+function initializeCardInteractions() {
+    const cards = document.querySelectorAll('.invoice-card');
+    
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.05}s`;
+        
+        card.addEventListener('click', function(e) {
+            if (e.target === this || e.target.classList.contains('card-body') || e.target.classList.contains('card-info-row')) {
+                addRippleEffect(this, e);
+            }
+        });
+    });
+}
+
+// Initialize action buttons
+function initializeActionButtons() {
+    const actionButtons = document.querySelectorAll('.action-btn, .card-action-btn');
+    
+    actionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            
+            if (href && (href.includes('pdf') || href.includes('do_pdf'))) {
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                setTimeout(() => {
+                    if (this.parentElement) {
+                        this.innerHTML = originalHTML;
+                        this.disabled = false;
+                    }
+                }, 3000);
+            }
+        });
+    });
+}
+
+// Animate statistics on load
+function animateStats() {
+    const statValues = document.querySelectorAll('.stat-value');
+    
+    statValues.forEach((stat, index) => {
+        const finalValue = stat.textContent;
+        const isNumber = !isNaN(parseFloat(finalValue.replace(/[^\d]/g, '')));
+        
+        if (isNumber) {
+            const numericValue = parseFloat(finalValue.replace(/[^\d.-]/g, ''));
+            let currentValue = 0;
+            const increment = numericValue / 30; // Animate over 30 frames
+            const prefix = finalValue.match(/^[^\d]*/)[0];
+            const suffix = finalValue.match(/[^\d]*$/)[0];
+            
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if (currentValue >= numericValue) {
+                    stat.textContent = prefix + numericValue.toLocaleString() + suffix;
+                    clearInterval(timer);
+                } else {
+                    stat.textContent = prefix + Math.floor(currentValue).toLocaleString() + suffix;
+                }
+            }, 50);
+            
+            // Delay start based on index
+            setTimeout(() => {}, index * 200);
+        }
+    });
+}
+
+// Utility Functions
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Add ripple effect
+function addRippleEffect(element, event) {
+    const ripple = document.createElement('span');
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    ripple.style.cssText = `
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.3);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        width: ${size}px;
+        height: ${size}px;
+        left: ${x}px;
+        top: ${y}px;
+        pointer-events: none;
+    `;
+    
+    // Add ripple animation if it doesn't exist
+    if (!document.querySelector('style[data-ripple]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-ripple', 'true');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    element.style.position = 'relative';
+    element.style.overflow = 'hidden';
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        if (ripple.parentElement) {
+            ripple.remove();
+        }
+    }, 600);
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add notification styles if not already present
+    if (!document.querySelector('style[data-notifications]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-notifications', 'true');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            }
+            .notification.success { border-left: 4px solid var(--accent-green); }
+            .notification.error { border-left: 4px solid var(--danger-color); }
+            .notification button {
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                opacity: 0.6;
+                margin-left: auto;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + N for new invoice
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = document.querySelector('.create-invoice-btn').href;
+    }
+    
+    // Ctrl/Cmd + F for search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    
+    // Escape to clear search
+    if (e.key === 'Escape') {
+        const searchInput = document.getElementById('searchInput');
+        const dateFilter = document.getElementById('dateFilter');
+        if (searchInput.value || dateFilter.value) {
+            searchInput.value = '';
+            dateFilter.value = '';
+            filterInvoices();
+        }
+    }
+});
+
+// Export functionality
+function exportToCSV() {
+    const table = document.getElementById('invoicesTable');
+    if (!table) return;
+    
+    const rows = table.querySelectorAll('tr');
+    const csv = [];
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = [];
+        const cols = rows[i].querySelectorAll('td, th');
+        
+        for (let j = 0; j < cols.length - 1; j++) { // Exclude actions column
+            let cellText = cols[j].textContent.trim();
+            cellText = cellText.replace(/"/g, '""'); // Escape quotes
+            row.push(`"${cellText}"`);
+        }
+        csv.push(row.join(','));
+    }
+    
+    const csvContent = csv.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `invoices_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Print functionality
+function printTable() {
+    const printWindow = window.open('', '_blank');
+    const table = document.getElementById('invoicesTable').outerHTML;
+    
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Invoices Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f5f5f5; }
+                    .action-buttons { display: none; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>IFEX PR - Invoices Report</h2>
+                <p>Generated on: ${new Date().toLocaleString()}</p>
+                ${table}
+            </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+}
+
+// Context menu functionality
+function showContextMenu(event, row) {
+    event.preventDefault();
+    hideContextMenu();
+    
+    const contextMenu = document.createElement('div');
+    contextMenu.id = 'contextMenu';
+    contextMenu.innerHTML = `
+        <div class="context-menu-item" onclick="quickViewInvoice('${row.dataset.id}')">
+            <i class="fas fa-eye"></i> Quick View
+        </div>
+        <div class="context-menu-item" onclick="duplicateInvoice('${row.dataset.id}')">
+            <i class="fas fa-copy"></i> Duplicate
+        </div>
+        <div class="context-menu-item" onclick="emailInvoice('${row.dataset.id}')">
+            <i class="fas fa-envelope"></i> Email Invoice
+        </div>
+        <div class="context-menu-item" onclick="markAsPaid('${row.dataset.id}')">
+            <i class="fas fa-check"></i> Mark as Paid
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item danger" onclick="deleteInvoice('${row.dataset.id}')">
+            <i class="fas fa-trash"></i> Delete
+        </div>
+    `;
+    
+    contextMenu.style.cssText = `
+        position: fixed;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 180px;
+        animation: fadeIn 0.2s ease-out;
+    `;
+    
+    document.body.appendChild(contextMenu);
+    
+    contextMenu.style.left = `${event.clientX}px`;
+    contextMenu.style.top = `${event.clientY}px`;
+    
+    // Add context menu styles if not present
+    if (!document.querySelector('style[data-context-menu]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-context-menu', 'true');
+        style.textContent = `
+            .context-menu-item {
+                padding: 12px 16px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                transition: all 0.2s;
+            }
+            .context-menu-item:hover {
+                background: var(--light-gray);
+            }
+            .context-menu-item.danger {
+                color: var(--danger-color);
+            }
+            .context-menu-item.danger:hover {
+                background: rgba(220, 38, 38, 0.1);
+            }
+            .context-menu-divider {
+                height: 1px;
+                background: var(--border-color);
+                margin: 4px 0;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Hide context menu when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', hideContextMenu, { once: true });
+    }, 100);
+}
+
+function hideContextMenu() {
+    const contextMenu = document.getElementById('contextMenu');
+    if (contextMenu) {
+        contextMenu.remove();
+    }
+}
+
+// Context menu actions
+function quickViewInvoice(id) {
+    console.log('Quick view invoice:', id);
+    // Implement quick view modal
+}
+
+function duplicateInvoice(id) {
+    if (confirm('Create a copy of this invoice?')) {
+        window.location.href = `/invoices/duplicate/${id}/`;
+    }
+}
+
+function emailInvoice(id) {
+    if (confirm('Send this invoice via email?')) {
+        // Implement email functionality
+        fetch(`/invoices/email/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Invoice emailed successfully!', 'success');
+            } else {
+                showNotification('Error sending email', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error sending email', 'error');
+        });
+    }
+}
+
+function markAsPaid(id) {
+    if (confirm('Mark this invoice as paid?')) {
+        // Implement mark as paid functionality
+        fetch(`/invoices/mark-paid/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Invoice marked as paid!', 'success');
+                location.reload();
+            } else {
+                showNotification('Error updating invoice', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error updating invoice', 'error');
+        });
+    }
+}
+
+function deleteInvoice(id) {
+    if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+        fetch(`/invoices/delete/${id}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Invoice deleted successfully!', 'success');
+                location.reload();
+            } else {
+                showNotification('Error deleting invoice', 'error');
+            }
+        })
+        .catch(error => {
+            showNotification('Error deleting invoice', 'error');
+        });
+    }
+}
+
+// Performance monitoring
+function logPerformance() {
+    if (performance && performance.mark) {
+        performance.mark('invoices-list-loaded');
+        console.log('Invoices list loaded in:', performance.now(), 'ms');
+    }
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add right-click context menu to table rows
+    const tableRows = document.querySelectorAll('#invoicesTable tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('contextmenu', function(e) {
+            showContextMenu(e, this);
+        });
+    });
+    
+    logPerformance();
+});
+</script>
+{% endblock %}

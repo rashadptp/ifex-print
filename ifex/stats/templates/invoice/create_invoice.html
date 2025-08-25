@@ -1,0 +1,1138 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if invoice %}Edit Invoice{% else %}Create Invoice{% endif %} - IFEX PR
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 32px;
+    }
+    
+    .invoice-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 16px;
+    }
+    
+    .info-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 16px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-bottom: 4px;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .quotation-ref {
+        background: rgba(59, 130, 246, 0.2);
+        padding: 8px 12px;
+        border-radius: 6px;
+        border-left: 3px solid #3b82f6;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-section h3 {
+        color: var(--primary-color);
+        margin-bottom: 20px;
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .form-section h3 i {
+        color: var(--accent-green);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .form-label i {
+        color: var(--text-gray);
+        font-size: 0.8rem;
+    }
+    
+    .form-control, .form-select {
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .form-control[readonly] {
+        background-color: #f8fafc;
+        color: var(--text-gray);
+    }
+    
+    /* Items Section */
+    .items-section {
+        background: #f8fafc;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .items-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .items-header h3 {
+        margin: 0;
+        color: var(--primary-color);
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .item-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 16px;
+        align-items: end;
+        padding: 16px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border: 1px solid var(--border-color);
+        transition: all 0.2s ease;
+    }
+    
+    .item-row:hover {
+        border-color: var(--accent-green);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+    }
+    
+    .item-row.header {
+        background: var(--primary-color);
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .item-row.header div {
+        padding: 0;
+    }
+    
+    .item-input-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .item-input-group label {
+        font-size: 0.8rem;
+        color: var(--text-gray);
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+    
+    .item-input-group input {
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    .item-input-group input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+    }
+    
+    .remove-item {
+        background: var(--danger-color);
+        color: white;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    
+    .remove-item:hover {
+        background: #b91c1c;
+        transform: scale(1.05);
+    }
+    
+    .add-item-btn {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+    
+    .add-item-btn:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+    
+    /* Calculations Section */
+    .calculations-section {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .calculation-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .calculation-row:last-child {
+        border-bottom: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--accent-green);
+        background: rgba(16, 185, 129, 0.05);
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+    
+    .calculation-label {
+        color: var(--text-gray);
+        font-weight: 500;
+    }
+    
+    .calculation-value {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    /* Action Buttons */
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .btn-submit {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+    }
+    
+    .btn-submit:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-cancel {
+        background: transparent;
+        color: var(--text-gray);
+        border: 1px solid var(--border-color);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+    }
+    
+    .btn-cancel:hover {
+        background: #f3f4f6;
+        color: var(--text-dark);
+        border-color: var(--text-gray);
+        text-decoration: none;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .invoice-header {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .invoice-info {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        
+        .form-section {
+            padding: 20px;
+        }
+        
+        .item-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+            padding: 16px;
+        }
+        
+        .item-row.header {
+            display: none;
+        }
+        
+        .item-input-group label {
+            display: block;
+        }
+        
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+        
+        .btn-submit, .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .remove-item {
+            width: 100%;
+            height: 40px;
+            margin-top: 8px;
+        }
+        
+        .calculations-section {
+            padding: 20px;
+        }
+    }
+    
+    /* Animation for new items */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .item-row {
+        animation: slideIn 0.3s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-file-invoice-dollar"></i>
+        {% if invoice %}Edit Invoice{% else %}Create New Invoice{% endif %}
+    </h1>
+    <p class="page-subtitle">
+        {% if invoice %}Update the details of your invoice{% else %}Create a professional invoice from quotation{% endif %}
+    </p>
+</div>
+
+<!-- Invoice Header -->
+<div class="invoice-header">
+    <div class="invoice-info">
+        <div class="info-card quotation-ref">
+            <div class="info-label">
+                <i class="fas fa-file-invoice"></i>
+                Based on Quotation
+            </div>
+            <div class="info-value">{{ quotation.quotation_number }}</div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-label">
+                <i class="fas fa-user"></i>
+                Customer
+            </div>
+            <div class="info-value">{{ quotation.customer.name }}</div>
+        </div>
+        
+        {% if invoice %}
+        <div class="info-card">
+            <div class="info-label">
+                <i class="fas fa-hashtag"></i>
+                Invoice Number
+            </div>
+            <div class="info-value">{{ invoice.invoice_number }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Main Form -->
+<form method="post" id="invoiceForm">
+    {% csrf_token %}
+    
+    <!-- Basic Information Section -->
+<div class="form-section">
+    <h3><i class="fas fa-info-circle"></i> Invoice Information</h3>
+    
+<div class="form-row">
+    {% if show_customer_select %}
+    <div class="form-group">
+        <label class="form-label" for="customer">
+            <i class="fas fa-user"></i> Customer *
+        </label>
+        <select name="customer" id="customer" class="form-select" required>
+            <option value="">Select a customer</option>
+            {% for c in customers %}
+            <option value="{{ c.id }}" {% if c.id == customer.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% else %}
+    <div class="form-group">
+        <label class="form-label" for="quotation_info">
+            <i class="fas fa-file-invoice"></i> Quotation Reference
+        </label>
+        <input type="text" 
+               id="quotation_info"
+               class="form-control" 
+               value="{{ quotation.quotation_number }} - {{ customer.name|default:quotation.customer.name }}"
+               readonly>
+        <input type="hidden" name="customer" value="{{ customer.id|default:quotation.customer.id }}">
+    </div>
+    {% endif %}
+    
+    <div class="form-group">
+        <label class="form-label" for="invoice_date">
+            <i class="fas fa-calendar"></i> Invoice Date *
+        </label>
+        <input type="date" 
+               name="invoice_date" 
+               id="invoice_date"
+               class="form-control"
+               value="{{ invoice.invoice_date|date:'Y-m-d'|default:'now'|date:'Y-m-d' }}"
+               required>
+    </div>
+</div>
+    
+    <!-- Items Section -->
+    <div class="items-section">
+        <div class="items-header">
+            <h3><i class="fas fa-list"></i> Invoice Items</h3>
+        </div>
+        
+        <!-- Items Header Row (Desktop Only) -->
+        <div class="item-row header d-none d-md-grid">
+            <div>Item Name</div>
+            <div>Quantity</div>
+            <div>Unit Price (AED)</div>
+            <div>Action</div>
+        </div>
+        
+        <!-- Items Container -->
+        <div id="items">
+            {% if items %}
+                {% for item in items %}
+                <div class="item-row">
+                    <div class="item-input-group">
+                        <label>Item Name *</label>
+                        <input type="text" name="item_name" value="{{ item.item_name }}" required placeholder="Enter item name">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Quantity *</label>
+                        <input type="number" name="quantity" value="{{ item.quantity }}" required min="1" placeholder="Qty" onchange="calculateTotals()">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Unit Price *</label>
+                        <input type="number" step="0.01" name="price" value="{{ item.price }}" required min="0" placeholder="0.00" onchange="calculateTotals()">
+                    </div>
+                    <button type="button" class="remove-item" onclick="removeItem(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            {% elif quotation_items %}
+                {% for q_item in quotation_items %}
+                <div class="item-row">
+                    <div class="item-input-group">
+                        <label>Item Name *</label>
+                        <input type="text" name="item_name" value="{{ q_item.item_name }}" required placeholder="Enter item name">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Quantity *</label>
+                        <input type="number" name="quantity" value="{{ q_item.quantity }}" required min="1" placeholder="Qty" onchange="calculateTotals()">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Unit Price *</label>
+                        <input type="number" step="0.01" name="price" value="{{ q_item.price }}" required min="0" placeholder="0.00" onchange="calculateTotals()">
+                    </div>
+                    <button type="button" class="remove-item" onclick="removeItem(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="item-row">
+                    <div class="item-input-group">
+                        <label>Item Name *</label>
+                        <input type="text" name="item_name" required placeholder="Enter item name">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Quantity *</label>
+                        <input type="number" name="quantity" required min="1" placeholder="Qty" onchange="calculateTotals()">
+                    </div>
+                    <div class="item-input-group">
+                        <label>Unit Price *</label>
+                        <input type="number" step="0.01" name="price" required min="0" placeholder="0.00" onchange="calculateTotals()">
+                    </div>
+                    <button type="button" class="remove-item" onclick="removeItem(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+        
+        <button type="button" class="add-item-btn" onclick="addItem()">
+            <i class="fas fa-plus"></i>
+            Add Another Item
+        </button>
+    </div>
+    
+    <!-- Calculations Section -->
+    <div class="calculations-section">
+        <h3><i class="fas fa-calculator"></i> Invoice Summary</h3>
+        
+        <div class="calculation-row">
+            <span class="calculation-label">Subtotal:</span>
+            <span class="calculation-value" id="subtotal">AED 0.00</span>
+        </div>
+        
+        <div class="calculation-row">
+            <span class="calculation-label">VAT (5%):</span>
+            <span class="calculation-value" id="vat">AED 0.00</span>
+        </div>
+        
+        <div class="calculation-row">
+            <span class="calculation-label"><strong>Total Amount:</strong></span>
+            <span class="calculation-value" id="total"><strong>AED 0.00</strong></span>
+        </div>
+    </div>
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <a href="{% url 'invoice_list' %}" class="btn-cancel">
+            <i class="fas fa-times"></i>
+            Cancel
+        </a>
+        <button type="submit" class="btn-submit">
+            <i class="fas fa-{% if invoice %}edit{% else %}plus{% endif %}"></i>
+            {% if invoice %}Update Invoice{% else %}Create Invoice{% endif %}
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let itemCount = parseInt("{{ items|length|default:'1' }}", 10);
+
+function addItem() {
+    itemCount++;
+    const html = `
+        <div class="item-row">
+            <div class="item-input-group">
+                <label>Item Name *</label>
+                <input type="text" name="item_name" required placeholder="Enter item name">
+            </div>
+            <div class="item-input-group">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" required min="1" placeholder="Qty" onchange="calculateTotals()">
+            </div>
+            <div class="item-input-group">
+                <label>Unit Price *</label>
+                <input type="number" step="0.01" name="price" required min="0" placeholder="0.00" onchange="calculateTotals()">
+            </div>
+            <button type="button" class="remove-item" onclick="removeItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
+    document.getElementById('items').insertAdjacentHTML('beforeend', html);
+    
+    // Focus on the new item name input
+    const newRows = document.querySelectorAll('.item-row');
+    const lastRow = newRows[newRows.length - 1];
+    const firstInput = lastRow.querySelector('input[name="item_name"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Recalculate totals after adding item
+    calculateTotals();
+}
+
+function removeItem(button) {
+    const itemRow = button.closest('.item-row');
+    const itemsContainer = document.getElementById('items');
+    
+    // Don't allow removing the last item
+    if (itemsContainer.children.length <= 1) {
+        showNotification('You must have at least one item in the invoice.', 'warning');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to remove this item?')) {
+        itemRow.style.opacity = '0';
+        itemRow.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+            itemRow.remove();
+            itemCount--;
+            calculateTotals();
+        }, 300);
+    }
+}
+
+function calculateTotals() {
+    const itemRows = document.querySelectorAll('.item-row:not(.header)');
+    let subtotal = 0;
+    
+    itemRows.forEach(row => {
+        const quantityInput = row.querySelector('input[name="quantity"]');
+        const priceInput = row.querySelector('input[name="price"]');
+        
+        if (quantityInput && priceInput && quantityInput.value && priceInput.value) {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            subtotal += quantity * price;
+        }
+    });
+    
+    const vatRate = 0.05; // 5% VAT, matching backend
+    const vatAmount = subtotal * vatRate;
+    const total = subtotal + vatAmount;
+    
+    // Update display with formatted values
+    const subtotalElement = document.getElementById('subtotal');
+    const vatElement = document.getElementById('vat');
+    const totalElement = document.getElementById('total');
+    
+    if (subtotalElement) {
+        subtotalElement.textContent = `AED ${subtotal.toFixed(2)}`;
+    }
+    if (vatElement) {
+        vatElement.textContent = `AED ${vatAmount.toFixed(2)}`;
+    }
+    if (totalElement) {
+        totalElement.textContent = `AED ${total.toFixed(2)}`;
+    }
+    
+    // Add visual feedback for changes
+    animateCalculation('subtotal');
+    animateCalculation('vat');
+    animateCalculation('total');
+}
+
+function animateCalculation(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.style.transform = 'scale(1.05)';
+        element.style.color = 'var(--accent-green)';
+        setTimeout(() => {
+            element.style.transform = 'scale(1)';
+            element.style.color = '';
+        }, 200);
+    }
+}
+
+// Form validation
+document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+    // Check customer selection when creating from scratch
+    if (document.getElementById('customer') && !document.getElementById('customer').value) {
+        e.preventDefault();
+        showNotification('Please select a customer.', 'error');
+        document.getElementById('customer').focus();
+        document.getElementById('customer').style.borderColor = 'var(--danger-color)';
+        document.getElementById('customer').style.boxShadow = '0 0 0 2px rgba(220, 38, 38, 0.1)';
+        return false;
+    }
+    
+    // Check if all required fields are filled
+    const requiredFields = this.querySelectorAll('[required]');
+    let hasEmptyField = false;
+    
+    for (let field of requiredFields) {
+        if (!field.value.trim()) {
+            hasEmptyField = true;
+            field.focus();
+            field.style.borderColor = 'var(--danger-color)';
+            field.style.boxShadow = '0 0 0 2px rgba(220, 38, 38, 0.1)';
+            
+            // Reset border after 3 seconds
+            setTimeout(() => {
+                field.style.borderColor = '';
+                field.style.boxShadow = '';
+            }, 3000);
+            
+            break;
+        }
+    }
+    
+    if (hasEmptyField) {
+        e.preventDefault();
+        showNotification('Please fill in all required fields.', 'error');
+        return false;
+    }
+    
+    // Validate invoice date
+    const invoiceDate = document.getElementById('invoice_date').value;
+    if (invoiceDate) {
+        const selectedDate = new Date(invoiceDate);
+        const today = new Date();
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        
+        if (selectedDate > today) {
+            e.preventDefault();
+            showNotification('Invoice date cannot be in the future.', 'error');
+            document.getElementById('invoice_date').focus();
+            return false;
+        }
+        
+        if (selectedDate < oneYearAgo) {
+            if (!confirm('The invoice date is more than a year ago. Are you sure this is correct?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('.btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    submitBtn.disabled = true;
+    
+    // Re-enable button after 10 seconds in case of issues
+    setTimeout(() => {
+        if (submitBtn.disabled) {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }, 10000);
+});
+
+// Auto-save functionality (optional)
+let autoSaveTimeout;
+function autoSave() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+        const formData = new FormData(document.getElementById('invoiceForm'));
+        // Here you could implement auto-save to localStorage or server
+        console.log('Auto-saving invoice draft...');
+    }, 2000);
+}
+
+// Add input listeners for auto-save
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('#invoiceForm input, #invoiceForm select, #invoiceForm textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', autoSave);
+    });
+});
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to today for invoice date
+    const invoiceDateInput = document.getElementById('invoice_date');
+    
+    // Calculate initial totals
+    calculateTotals();
+    
+    // Add input listeners for real-time calculation
+    document.addEventListener('input', function(e) {
+        if (e.target.name === 'quantity' || e.target.name === 'price') {
+            calculateTotals();
+        }
+    });
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + Enter to submit form
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('invoiceForm').dispatchEvent(new Event('submit'));
+        }
+        
+        // Ctrl/Cmd + N to add new item
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            addItem();
+        }
+    });
+    
+    // Add item row hover effects
+    addItemRowEffects();
+    
+    // Initialize tooltips
+    initializeTooltips();
+    
+    // Load any saved draft
+    loadDraft();
+});
+
+// Add hover effects to item rows
+function addItemRowEffects() {
+    const itemRows = document.querySelectorAll('.item-row:not(.header)');
+    
+    itemRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.borderColor = 'var(--accent-green)';
+            this.style.boxShadow = '0 2px 8px rgba(16, 185, 129, 0.1)';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.borderColor = '';
+            this.style.boxShadow = '';
+        });
+    });
+}
+
+// Initialize tooltips for form elements
+function initializeTooltips() {
+    const tooltipElements = [
+        { selector: '#invoice_date', text: 'Select the date when this invoice is issued' },
+        { selector: '.add-item-btn', text: 'Add a new item to the invoice (Ctrl+N)' },
+        { selector: '.remove-item', text: 'Remove this item from the invoice' }
+    ];
+    
+    tooltipElements.forEach(({ selector, text }) => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            element.setAttribute('title', text);
+            
+            // For touch devices, show tooltip on touch
+            element.addEventListener('touchstart', function() {
+                showMobileTooltip(this, text);
+            });
+        });
+    });
+}
+
+// Mobile tooltip functionality
+function showMobileTooltip(element, text) {
+    if (window.innerWidth > 768) return; // Only for mobile
+    
+    const tooltip = document.createElement('div');
+    tooltip.textContent = text;
+    tooltip.style.cssText = `
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        z-index: 1000;
+        max-width: 200px;
+        word-wrap: break-word;
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = `${rect.left}px`;
+    tooltip.style.top = `${rect.bottom + 8}px`;
+    
+    setTimeout(() => {
+        if (tooltip.parentElement) {
+            tooltip.remove();
+        }
+    }, 2000);
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add notification styles if not already present
+    if (!document.querySelector('style[data-notifications]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-notifications', 'true');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            }
+            .notification.success { border-left: 4px solid var(--accent-green); }
+            .notification.error { border-left: 4px solid var(--danger-color); }
+            .notification.warning { border-left: 4px solid var(--accent-orange); }
+            .notification button {
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                opacity: 0.6;
+                margin-left: auto;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @media (max-width: 480px) {
+                .notification {
+                    right: 10px;
+                    left: 10px;
+                    max-width: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-circle';
+        case 'warning': return 'exclamation-triangle';
+        default: return 'info-circle';
+    }
+}
+
+// Draft saving functionality
+function saveDraft() {
+    const formData = new FormData(document.getElementById('invoiceForm'));
+    const draftData = {};
+    
+    for (let [key, value] of formData.entries()) {
+        if (draftData[key]) {
+            if (Array.isArray(draftData[key])) {
+                draftData[key].push(value);
+            } else {
+                draftData[key] = [draftData[key], value];
+            }
+        } else {
+            draftData[key] = value;
+        }
+    }
+    
+    localStorage.setItem('invoice_draft', JSON.stringify(draftData));
+}
+
+function loadDraft() {
+    const draftData = localStorage.getItem('invoice_draft');
+    if (draftData && confirm('A draft of this invoice was found. Would you like to load it?')) {
+        try {
+            const data = JSON.parse(draftData);
+            
+            // Load basic fields
+            if (data.invoice_date) {
+                document.getElementById('invoice_date').value = data.invoice_date;
+            }
+            
+            // Note: Loading items would require more complex logic
+            // This is a simplified version
+            
+        } catch (e) {
+            console.error('Error loading draft:', e);
+            localStorage.removeItem('invoice_draft');
+        }
+    }
+}
+
+function clearDraft() {
+    localStorage.removeItem('invoice_draft');
+}
+
+// Clear draft on successful submission
+document.getElementById('invoiceForm').addEventListener('submit', function() {
+    clearDraft();
+});
+
+// Copy item functionality
+function copyItem(button) {
+    const itemRow = button.closest('.item-row');
+    const itemName = itemRow.querySelector('input[name="item_name"]').value;
+    const quantity = itemRow.querySelector('input[name="quantity"]').value;
+    const price = itemRow.querySelector('input[name="price"]').value;
+    
+    const html = `
+        <div class="item-row">
+            <div class="item-input-group">
+                <label>Item Name *</label>
+                <input type="text" name="item_name" value="${itemName}" required placeholder="Enter item name">
+            </div>
+            <div class="item-input-group">
+                <label>Quantity *</label>
+                <input type="number" name="quantity" value="${quantity}" required min="1" placeholder="Qty" onchange="calculateTotals()">
+            </div>
+            <div class="item-input-group">
+                <label>Unit Price *</label>
+                <input type="number" step="0.01" name="price" value="${price}" required min="0" placeholder="0.00" onchange="calculateTotals()">
+            </div>
+            <button type="button" class="remove-item" onclick="removeItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
+    
+    itemRow.insertAdjacentHTML('afterend', html);
+    calculateTotals();
+    
+    showNotification('Item copied successfully!', 'success');
+}
+
+// Bulk operations
+function clearAllItems() {
+    if (confirm('Are you sure you want to clear all items? This action cannot be undone.')) {
+        const itemsContainer = document.getElementById('items');
+        itemsContainer.innerHTML = `
+            <div class="item-row">
+                <div class="item-input-group">
+                    <label>Item Name *</label>
+                    <input type="text" name="item_name" required placeholder="Enter item name">
+                </div>
+                <div class="item-input-group">
+                    <label>Quantity *</label>
+                    <input type="number" name="quantity" required min="1" placeholder="Qty" onchange="calculateTotals()">
+                </div>
+                <div class="item-input-group">
+                    <label>Unit Price *</label>
+                    <input type="number" step="0.01" name="price" required min="0" placeholder="0.00" onchange="calculateTotals()">
+                </div>
+                <button type="button" class="remove-item" onclick="removeItem(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>`;
+        
+        calculateTotals();
+        showNotification('All items cleared', 'info');
+    }
+}
+
+// Prevent form submission on Enter key in input fields (except submit button)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+        e.preventDefault();
+        
+        // Move to next input field
+        const inputs = Array.from(document.querySelectorAll('input'));
+        const currentIndex = inputs.indexOf(e.target);
+        if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
+        }
+    }
+});
+
+// Performance logging
+console.log('Invoice form initialized successfully');
+</script>
+{% endblock %}

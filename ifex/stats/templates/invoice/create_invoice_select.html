@@ -1,0 +1,850 @@
+{% extends "base.html" %}
+
+{% block title %}Create Invoice from Quotation - IFEX PR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .selection-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 32px;
+        border-radius: 16px;
+        margin-bottom: 32px;
+        text-align: center;
+    }
+    
+    .selection-header h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .selection-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .selection-form {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .form-group {
+        margin-bottom: 32px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .form-label i {
+        color: var(--accent-green);
+    }
+    
+    .quotation-select {
+        width: 100%;
+        padding: 16px 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        background-size: 20px;
+        padding-right: 50px;
+    }
+    
+    .quotation-select:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    .quotation-select option {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+    
+    .search-wrapper {
+        position: relative;
+        margin-bottom: 16px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 12px 16px 12px 44px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        background: #f8fafc;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent-green);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-gray);
+    }
+    
+    .quotation-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quotation-option:last-child {
+        border-bottom: none;
+    }
+    
+    .quotation-option:hover {
+        background: rgba(16, 185, 129, 0.05);
+        border-radius: 8px;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    
+    .quotation-info {
+        flex: 1;
+    }
+    
+    .quotation-number {
+        font-weight: 600;
+        color: var(--accent-blue);
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    .customer-name {
+        color: var(--text-dark);
+        font-weight: 500;
+        margin-top: 2px;
+    }
+    
+    .quotation-amount {
+        color: var(--accent-green);
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+    
+    .quotation-date {
+        color: var(--text-gray);
+        font-size: 0.85rem;
+        margin-top: 2px;
+    }
+    
+    .custom-select-wrapper {
+        position: relative;
+        margin-bottom: 24px;
+    }
+    
+    .custom-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 12px 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .custom-dropdown.show {
+        display: block;
+    }
+    
+    .no-quotations {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-gray);
+    }
+    
+    .no-quotations i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 16px;
+        display: block;
+    }
+    
+    .no-quotations h3 {
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+    
+    .create-quotation-link {
+        color: var(--accent-green);
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 16px;
+        display: inline-block;
+    }
+    
+    .create-quotation-link:hover {
+        text-decoration: underline;
+        color: #059669;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        margin-top: 32px;
+    }
+    
+    .btn-submit {
+        background: var(--accent-green);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+        justify-content: center;
+    }
+    
+    .btn-submit:hover:not(:disabled) {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-submit:disabled {
+        background: var(--text-gray);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn-cancel {
+        background: transparent;
+        color: var(--text-gray);
+        border: 1px solid var(--border-color);
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+        justify-content: center;
+    }
+    
+    .btn-cancel:hover {
+        background: var(--light-gray);
+        color: var(--text-dark);
+        border-color: var(--text-gray);
+        text-decoration: none;
+    }
+    
+    .back-nav {
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .back-link {
+        color: var(--text-gray);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .back-link:hover {
+        color: var(--accent-green);
+        text-decoration: none;
+        transform: translateX(-4px);
+    }
+    
+    .help-text {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 24px;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        line-height: 1.5;
+    }
+    
+    .help-text i {
+        color: var(--accent-green);
+        margin-right: 8px;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .selection-header {
+            padding: 24px 20px;
+        }
+        
+        .selection-header h1 {
+            font-size: 1.8rem;
+        }
+        
+        .selection-form {
+            padding: 30px 20px;
+            border-radius: 12px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-submit, .btn-cancel {
+            width: 100%;
+            min-width: auto;
+        }
+        
+        .custom-dropdown {
+            max-height: 250px;
+        }
+        
+        .quotation-option {
+            padding: 16px 8px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .selection-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .selection-form {
+            padding: 20px 16px;
+        }
+        
+        .quotation-select {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-submit, .btn-cancel {
+            padding: 14px 24px;
+            font-size: 0.9rem;
+        }
+    }
+    
+    /* Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .selection-form {
+        animation: fadeInUp 0.5s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div class="back-nav">
+    <a href="{% url 'invoice_list' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Invoices
+    </a>
+</div>
+
+<!-- Selection Header -->
+<div class="selection-header">
+    <h1>
+        <i class="fas fa-file-invoice-dollar"></i>
+        Create New Invoice
+    </h1>
+    <p class="selection-subtitle">Select a quotation to convert into an invoice</p>
+</div>
+
+<!-- Selection Form -->
+<div class="selection-form">
+    {% if quotations %}
+        <form method="post" id="invoiceCreationForm">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label" for="quotation_id">
+                    <i class="fas fa-file-invoice"></i>
+                    Select Quotation
+                </label>
+                
+                <div class="search-wrapper">
+                    <input type="text" 
+                           class="search-input" 
+                           id="searchQuotations" 
+                           placeholder="Search by quotation number or customer name..."
+                           autocomplete="off">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                
+                <select name="quotation_id" id="quotation_id" class="quotation-select" required>
+                    <option value="">-- Select a Quotation --</option>
+                    <option value="none">-- No Quotation (Standalone Invoice) --</option>
+                    {% for q in quotations %}
+                    <option value="{{ q.id }}" 
+                            data-customer="{{ q.customer.name|lower }}" 
+                            data-number="{{ q.quotation_number|lower }}"
+                            data-amount="{{ q.grand_total }}"
+                            data-date="{{ q.created_at|date:'M d, Y' }}">
+                        {{ q.quotation_number }} - {{ q.customer.name }} (AED {{ q.grand_total|floatformat:2 }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- <div class="help-text">
+                <i class="fas fa-info-circle"></i>
+                <strong>Note:</strong> Only quotations that haven't been converted to invoices are shown. 
+                The invoice will inherit all items and details from the selected quotation.
+            </div> -->
+            
+            <div class="form-actions">
+                <a href="{% url 'invoice_list' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-submit" disabled>
+                    <i class="fas fa-arrow-right"></i>
+                    Proceed to Create Invoice
+                </button>
+            </div>
+        </form>
+    {% else %}
+        <div class="no-quotations">
+            <i class="fas fa-file-invoice"></i>
+            <h3>No Quotations Available</h3>
+            <p>There are no quotations available to convert to invoices.</p>
+            <p>Create a quotation first, then return here to generate an invoice.</p>
+            <a href="{% url 'create_quotation' %}" class="create-quotation-link">
+                <i class="fas fa-plus"></i> Create New Quotation
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchQuotations');
+    const quotationSelect = document.getElementById('quotation_id');
+    const submitButton = document.querySelector('.btn-submit');
+    const form = document.getElementById('invoiceCreationForm');
+    
+    // Enable/disable submit button based on selection
+    function toggleSubmitButton() {
+        const isSelected = quotationSelect.value !== '';
+        submitButton.disabled = !isSelected;
+        
+        if (isSelected) {
+            submitButton.innerHTML = '<i class="fas fa-arrow-right"></i> Proceed to Create Invoice';
+        } else {
+            submitButton.innerHTML = '<i class="fas fa-arrow-right"></i> Select a Quotation First';
+        }
+    }
+    
+    // Search functionality
+    function filterQuotations() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const options = quotationSelect.querySelectorAll('option');
+        let hasVisibleOptions = false;
+        
+        options.forEach((option, index) => {
+            if (index === 0) return; // Skip the placeholder option
+            
+            const customer = option.dataset.customer || '';
+            const number = option.dataset.number || '';
+            const optionText = option.textContent.toLowerCase();
+            
+            const matches = customer.includes(searchTerm) || 
+                          number.includes(searchTerm) || 
+                          optionText.includes(searchTerm);
+            
+            if (matches) {
+                option.style.display = '';
+                hasVisibleOptions = true;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // Reset selection if current selection is not visible
+        if (quotationSelect.value && quotationSelect.selectedOptions[0].style.display === 'none') {
+            quotationSelect.value = '';
+            toggleSubmitButton();
+        }
+    }
+    
+    // Event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', filterQuotations);
+        
+        // Clear search on escape
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                filterQuotations();
+                this.blur();
+            }
+        });
+    }
+    
+    if (quotationSelect) {
+        quotationSelect.addEventListener('change', function() {
+            toggleSubmitButton();
+            
+            // Show selected quotation details
+            if (this.value) {
+                const selectedOption = this.selectedOptions[0];
+                const customer = selectedOption.textContent.split(' - ')[1].split(' (')[0];
+                const amount = selectedOption.dataset.amount;
+                const date = selectedOption.dataset.date;
+                
+                showNotification(
+                    `Selected: ${customer} - AED ${parseFloat(amount).toFixed(2)} (Created: ${date})`, 
+                    'info'
+                );
+            }
+        });
+    }
+    
+    // Form submission with loading state
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!quotationSelect.value) {
+                e.preventDefault();
+                showNotification('Please select a quotation first.', 'error');
+                return false;
+            }
+            
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Add subtle loading effect to form
+            form.style.opacity = '0.8';
+            form.style.pointerEvents = 'none';
+            
+            // Re-enable form after timeout (in case of server issues)
+            setTimeout(() => {
+                if (submitButton.disabled) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-arrow-right"></i> Proceed to Create Invoice';
+                    form.style.opacity = '1';
+                    form.style.pointerEvents = 'auto';
+                    showNotification('Request timeout. Please try again.', 'warning');
+                }
+            }, 10000);
+        });
+    }
+    
+    // Initialize the form state
+    toggleSubmitButton();
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + F to focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            if (searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }
+        
+        // Enter to submit form if quotation is selected
+        if (e.key === 'Enter' && quotationSelect.value && !submitButton.disabled) {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+        
+        // Escape to go back
+        if (e.key === 'Escape') {
+            const backLink = document.querySelector('.back-link');
+            if (backLink && confirm('Go back to invoices list?')) {
+                window.location.href = backLink.href;
+            }
+        }
+    });
+    
+    // Auto-focus search input
+    if (searchInput && window.innerWidth > 768) {
+        searchInput.focus();
+    }
+    
+    // Add hover effects to select options (for modern browsers)
+    if (quotationSelect) {
+        quotationSelect.addEventListener('mouseenter', function() {
+            this.style.borderColor = 'var(--accent-green)';
+        });
+        
+        quotationSelect.addEventListener('mouseleave', function() {
+            if (this !== document.activeElement) {
+                this.style.borderColor = '';
+            }
+        });
+    }
+});
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add notification styles if not already present
+    if (!document.querySelector('style[data-notifications]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-notifications', 'true');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            }
+            .notification.success { border-left: 4px solid var(--accent-green); }
+            .notification.error { border-left: 4px solid var(--danger-color); }
+            .notification.warning { border-left: 4px solid var(--accent-orange); }
+            .notification.info { border-left: 4px solid var(--accent-blue); }
+            .notification button {
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                opacity: 0.6;
+                margin-left: auto;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @media (max-width: 480px) {
+                .notification {
+                    right: 10px;
+                    left: 10px;
+                    max-width: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-circle';
+        case 'warning': return 'exclamation-triangle';
+        case 'info': return 'info-circle';
+        default: return 'info-circle';
+    }
+}
+
+// Advanced search functionality
+function initializeAdvancedSearch() {
+    const searchInput = document.getElementById('searchQuotations');
+    const quotationSelect = document.getElementById('quotation_id');
+    
+    if (!searchInput || !quotationSelect) return;
+    
+    let searchTimeout;
+    
+    // Debounced search
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performAdvancedSearch(this.value);
+        }, 300);
+    });
+    
+    function performAdvancedSearch(searchTerm) {
+        const options = Array.from(quotationSelect.options).slice(1); // Skip placeholder
+        const term = searchTerm.toLowerCase().trim();
+        
+        if (!term) {
+            // Show all options if search is empty
+            options.forEach(option => option.style.display = '');
+            return;
+        }
+        
+        let visibleCount = 0;
+        
+        options.forEach(option => {
+            const customer = option.dataset.customer || '';
+            const number = option.dataset.number || '';
+            const amount = option.dataset.amount || '';
+            const text = option.textContent.toLowerCase();
+            
+            // Multiple search criteria
+            const matches = customer.includes(term) || 
+                          number.includes(term) || 
+                          text.includes(term) ||
+                          amount.includes(term);
+            
+            if (matches) {
+                option.style.display = '';
+                visibleCount++;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+        
+        // Show search results count
+        if (term && visibleCount === 0) {
+            showNotification('No quotations found matching your search.', 'info');
+        }
+    }
+}
+
+// Initialize advanced search
+document.addEventListener('DOMContentLoaded', initializeAdvancedSearch);
+
+// Quotation preview functionality
+function showQuotationPreview(quotationId) {
+    if (!quotationId) return;
+    
+    const option = document.querySelector(`option[value="${quotationId}"]`);
+    if (!option) return;
+    
+    const customer = option.textContent.split(' - ')[1].split(' (')[0];
+    const amount = option.dataset.amount;
+    const date = option.dataset.date;
+    const quotationNumber = option.textContent.split(' - ')[0];
+    
+    // Create preview tooltip or modal here if needed
+    console.log('Quotation Preview:', {
+        number: quotationNumber,
+        customer: customer,
+        amount: amount,
+        date: date
+    });
+}
+
+// Form validation
+function validateForm() {
+    const quotationSelect = document.getElementById('quotation_id');
+    const submitButton = document.querySelector('.btn-submit');
+    
+    if (!quotationSelect.value) {
+        showNotification('Please select a quotation to proceed.', 'error');
+        quotationSelect.focus();
+        return false;
+    }
+    
+    return true;
+}
+
+// Handle page visibility change
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        // Refresh quotations list if page becomes visible again
+        // This could be useful if quotations are updated in another tab
+        console.log('Page became visible - consider refreshing quotations');
+    }
+});
+
+// Initialize tooltips for help text
+document.addEventListener('DOMContentLoaded', function() {
+    const helpIcon = document.querySelector('.help-text i');
+    if (helpIcon) {
+        helpIcon.setAttribute('title', 'Click to learn more about invoice creation');
+    }
+});
+
+// Performance logging
+if (performance && performance.mark) {
+    performance.mark('quotation-selection-loaded');
+    console.log('Quotation selection page loaded in:', performance.now(), 'ms');
+}
+
+// Analytics tracking (if needed)
+function trackQuotationSelection(quotationId) {
+    // Add analytics tracking code here
+    console.log('Quotation selected for invoice creation:', quotationId);
+}
+
+// Add selection tracking
+document.getElementById('quotation_id')?.addEventListener('change', function() {
+    if (this.value) {
+        trackQuotationSelection(this.value);
+    }
+});
+
+console.log('Quotation selection page initialized successfully');
+</script>
+{% endblock %}
