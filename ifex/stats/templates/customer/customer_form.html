@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Customer - IFEX PR{% endblock %}
+
+{% block extra_css %}
+<style>
+    .customer-form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .form-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 32px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: var(--danger-color);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .form-control:invalid {
+        border-color: var(--danger-color);
+    }
+    
+    .form-control:invalid:focus {
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .btn-submit {
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        min-width: 120px;
+    }
+    
+    .btn-submit:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-cancel {
+        background: transparent;
+        color: var(--text-gray);
+        border: 1px solid var(--border-color);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .btn-cancel:hover {
+        background: var(--light-gray);
+        color: var(--text-dark);
+        border-color: var(--text-gray);
+        text-decoration: none;
+    }
+    
+    .back-nav {
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    
+    .back-link {
+        color: var(--text-gray);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .back-link:hover {
+        color: var(--accent-blue);
+        text-decoration: none;
+    }
+    
+    .help-text {
+        font-size: 0.85rem;
+        color: var(--text-gray);
+        margin-top: 4px;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .customer-form-container {
+            margin: 0 16px;
+        }
+        
+        .form-card {
+            padding: 24px 20px;
+        }
+        
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn-submit, .btn-cancel {
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .form-header {
+            padding: 20px 16px;
+        }
+        
+        .form-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .form-card {
+            padding: 20px 16px;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+        }
+    }
+    
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .form-card {
+        animation: fadeIn 0.4s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div class="back-nav">
+    <a href="{% url 'customer_list' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i>
+        Back to Customers
+    </a>
+</div>
+
+<div class="customer-form-container">
+    <!-- Form Header -->
+    <div class="form-header">
+        <h1>
+            <i class="fas fa-{% if action == 'Create' %}user-plus{% else %}user-edit{% endif %}"></i>
+            {{ action }} Customer
+        </h1>
+    </div>
+    
+    <!-- Form Card -->
+    <div class="form-card">
+        <form method="post" id="customerForm">
+            {% csrf_token %}
+            
+            <!-- Customer Name -->
+            <div class="form-group">
+                <label class="form-label required" for="name">Customer Name</label>
+                <input type="text" 
+                       id="name" 
+                       name="name" 
+                       class="form-control" 
+                       value="{{ customer.name|default_if_none:'' }}" 
+                       required 
+                       placeholder="Enter customer name"
+                       autocomplete="name">
+                <div class="help-text">Full name or company name</div>
+            </div>
+            
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label class="form-label required" for="phone">Phone Number</label>
+                <input type="tel" 
+                       id="phone" 
+                       name="phone" 
+                       class="form-control" 
+                       value="{{ customer.phone|default_if_none:'' }}" 
+                       required 
+                       placeholder="e.g., +971 50 123 4567"
+                       autocomplete="tel">
+                <div class="help-text">Include country code for international numbers</div>
+            </div>
+            
+            <!-- Email Address -->
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       class="form-control" 
+                       value="{{ customer.email|default_if_none:'' }}" 
+                       placeholder="customer@example.com"
+                       autocomplete="email">
+                <div class="help-text">Optional - for sending quotations and invoices</div>
+            </div>
+            
+            <!-- Address -->
+            <div class="form-group">
+                <label class="form-label" for="address">Address</label>
+                <textarea id="address" 
+                          name="address" 
+                          class="form-control" 
+                          rows="3" 
+                          placeholder="Enter full address"
+                          autocomplete="street-address">{{ customer.address|default_if_none:'' }}</textarea>
+                <div class="help-text">Street address, building name, area, etc.</div>
+            </div>
+            
+            <!-- City and Country -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="city">City</label>
+                    <input type="text" 
+                           id="city" 
+                           name="city" 
+                           class="form-control" 
+                           value="{{ customer.city|default_if_none:'' }}" 
+                           placeholder="e.g., Dubai"
+                           autocomplete="address-level2">
+                </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{% url 'customer_list' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-{% if action == 'Create' %}plus{% else %}save{% endif %}"></i>
+                    {{ action }} Customer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('customerForm');
+    const submitButton = document.querySelector('.btn-submit');
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        
+        if (!name) {
+            e.preventDefault();
+            showNotification('Customer name is required.', 'error');
+            document.getElementById('name').focus();
+            return false;
+        }
+        
+        if (!phone) {
+            e.preventDefault();
+            showNotification('Phone number is required.', 'error');
+            document.getElementById('phone').focus();
+            return false;
+        }
+        
+        // Phone number validation (basic)
+        const phoneRegex = /^[\+]?[\d\s\-\(\)]{8,}$/;
+        if (!phoneRegex.test(phone)) {
+            e.preventDefault();
+            showNotification('Please enter a valid phone number.', 'error');
+            document.getElementById('phone').focus();
+            return false;
+        }
+        
+        // Email validation (if provided)
+        const email = document.getElementById('email').value.trim();
+        if (email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                showNotification('Please enter a valid email address.', 'error');
+                document.getElementById('email').focus();
+                return false;
+            }
+        }
+        
+        // Show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        // Re-enable after timeout (in case of issues)
+        setTimeout(() => {
+            if (submitButton.disabled) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-save"></i> {{ action }} Customer';
+            }
+        }, 10000);
+    });
+    
+    // Auto-format phone number
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function() {
+        let value = this.value.replace(/\D/g, ''); // Remove non-digits
+        
+        // Format UAE numbers
+        if (value.startsWith('971') && value.length > 3) {
+            value = '+971 ' + value.substring(3, 5) + ' ' + value.substring(5, 8) + ' ' + value.substring(8, 12);
+        } else if (value.startsWith('05') && value.length === 10) {
+            value = '+971 ' + value.substring(1, 3) + ' ' + value.substring(3, 6) + ' ' + value.substring(6, 10);
+        }
+        
+        this.value = value;
+    });
+    
+    // Auto-focus first field
+    document.getElementById('name').focus();
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + Enter to submit
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            form.dispatchEvent(new Event('submit'));
+        }
+        
+        // Escape to cancel
+        if (e.key === 'Escape') {
+            const cancelBtn = document.querySelector('.btn-cancel');
+            if (confirm('Discard changes and go back?')) {
+                window.location.href = cancelBtn.href;
+            }
+        }
+    });
+});
+
+// Show notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Add notification styles if not already present
+    if (!document.querySelector('style[data-notifications]')) {
+        const style = document.createElement('style');
+        style.setAttribute('data-notifications', 'true');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            }
+            .notification.success { border-left: 4px solid var(--accent-green); }
+            .notification.error { border-left: 4px solid var(--danger-color); }
+            .notification button {
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                opacity: 0.6;
+                margin-left: auto;
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @media (max-width: 480px) {
+                .notification {
+                    right: 10px;
+                    left: 10px;
+                    max-width: none;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-circle';
+        default: return 'info-circle';
+    }
+}
+</script>
+{% endblock %}
