@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quotation</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f8f8f8;
+    }
+    .container {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      position: relative;
+      background-color: white;
+    }
+    
+    /* Header Design */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      padding: 30px;
+      position: relative;
+      background-color: white;
+    }
+    
+    .logo-section {
+      width: 300px;
+      margin-right: 20px;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .logo-circles {
+      display: flex;
+      align-items: center;
+      margin-right: 15px;
+    }
+    
+    .circle {
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    
+    .circle-1 {
+      width: 25px;
+      height: 25px;
+      background-color: #0080c7;
+    }
+    
+    .circle-2 {
+      width: 20px;
+      height: 20px;
+      background-color: #87ceeb;
+    }
+    
+    .circle-3 {
+      width: 15px;
+      height: 15px;
+      background-color: #4169e1;
+    }
+    
+    .ifex-text {
+      font-size: 48px;
+      font-weight: bold;
+      color: #87ceeb;
+      margin-right: 5px;
+    }
+    
+    .tagline {
+      font-size: 12px;
+      color: #666;
+      margin-top: -5px;
+    }
+    
+    .company-banner {
+      position: absolute;
+      right: 0;
+      top: 30px;
+      background: linear-gradient(135deg, #87ceeb 0%, #4a5f7a 100%);
+      color: white;
+      padding: 20px 30px;
+      clip-path: polygon(15% 0%, 100% 0%, 100% 100%, 0% 100%);
+      width: 400px;
+      min-height: 120px;
+    }
+    
+    .arabic-text {
+      text-align: right;
+      font-size: 14px;
+      margin-bottom: 5px;
+      direction: rtl;
+    }
+    
+    .company-name {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .contact-details {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    
+    .website {
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    
+    /* Quotation Details */
+    .quotation-info {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px 30px;
+      align-items: flex-start;
+    }
+    
+    .quotation-title {
+      font-size: 36px;
+      font-weight: bold;
+      color: #4a5f7a;
+    }
+    
+    .quotation-details {
+      text-align: right;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .quotation-details strong {
+      color: #4a5f7a;
+    }
+    
+    /* Customer and Bank Section */
+    .customer-bank-section {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 30px 20px;
+    }
+    
+    .customer-info {
+      width: 45%;
+    }
+    
+    .customer-info h3 {
+      font-size: 14px;
+      font-weight: bold;
+      color: #4a5f7a;
+      margin-bottom: 10px;
+    }
+    
+    .customer-details {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #666;
+    }
+    
+    .bank-info {
+      width: 45%;
+      background-color: white;
+      border: 1px solid #ddd;
+      padding: 15px;
+      text-align: center;
+    }
+    
+    .bank-info h3 {
+      font-size: 12px;
+      margin-bottom: 10px;
+      color: #4a5f7a;
+    }
+    
+    .bank-details {
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    
+    /* Executive Info Bar */
+    .executive-bar {
+      margin: 0 30px;
+      background-color: #4a5f7a;
+      color: white;
+      display: flex;
+    }
+    
+    .exec-cell {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      border-right: 1px solid white;
+    }
+    
+    .exec-cell:last-child {
+      border-right: none;
+    }
+    
+    .exec-value {
+      background-color: #87ceeb;
+      color: white;
+      padding: 8px;
+      font-weight: normal;
+      margin-top: 5px;
+    }
+    
+    /* Items Table */
+    .items-table {
+      width: calc(100% - 60px);
+      margin: 0 30px 20px;
+      border-collapse: collapse;
+      border: 1px solid #ddd;
+    }
+    
+    .items-table th {
+      background-color: #4a5f7a;
+      color: white;
+      padding: 12px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    
+    .items-table td {
+      padding: 8px;
+      font-size: 11px;
+      text-align: center;
+      border: 1px solid #ddd;
+      min-height: 25px;
+    }
+    
+    .items-table tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    
+    .items-table tr:nth-child(odd) {
+      background-color: white;
+    }
+    
+    .description-cell {
+      text-align: left !important;
+    }
+    
+    .no-column {
+      width: 50px;
+    }
+    
+    .description-column {
+      width: 300px;
+    }
+    
+    .qty-column {
+      width: 80px;
+    }
+    
+    .price-column {
+      width: 100px;
+    }
+    
+    .total-column {
+      width: 100px;
+    }
+
+    /* Add alternating row colors for the filled rows */
+    .filled-row:nth-child(odd) {
+      background-color: #e6f3ff !important;
+    }
+    
+    .filled-row:nth-child(even) {
+      background-color: white !important;
+    }
+    
+    /* Empty rows styling */
+    .empty-row {
+      background-color: white !important;
+    }
+    
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo-container">
+          <div class="logo-circles">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+            <div class="circle circle-3"></div>
+          </div>
+          <span class="ifex-text">ifex</span>
+        </div>
+        <div class="tagline">PR AND<br>ADVERTISING EST</div>
+      </div>
+      
+      <div class="company-banner">
+        <div class="arabic-text">مؤسسة إيفكس للعلاقات العامة و الإعلان</div>
+        <div class="company-name">IFEX PR AND ADVERTISING EST</div>
+        <div class="contact-details">
+          Phone: 055 831 7409<br>
+          Ind. Area 3, Al Qusais, Dubai<br>
+          E mail: sales@ifexprint.com
+        </div>
+        <div class="website">www.ifexprint.com</div>
+      </div>
+    </div>
+    
+    <!-- Quotation Info -->
+    <div class="quotation-info">
+      <div class="quotation-title">QUOTATION</div>
+      <div class="quotation-details">
+        <strong>QUOTATION NO.</strong> {{ quotation.quotation_number|default:"10802" }}<br>
+        <strong>DATE</strong> {{ quotation.created_at|date:"d/m/Y"|default:"12/07/2025" }}<br>
+        <strong>TRN.</strong>104106033400003
+      </div>
+    </div>
+    
+    <!-- Customer and Bank Info -->
+    <div class="customer-bank-section">
+      <div class="customer-info">
+        <h3>TO</h3>
+        <div class="customer-details">
+          {{ customer.name|default:"Prague Clinics European Doctors LLC" }}<br>
+          {{ customer.address|default:"Nad Al Hamar<br>Dubai,United Arab Emirates<br>0<br>0" }}
+        </div>
+      </div>
+      
+      <div class="bank-info">
+        <h3>IFEX PR AND ADVERTISING EST.</h3>
+        <div class="bank-details">
+          <strong>BANK DETAILS :</strong> ABU DHABI COMMERCIAL BANK(ADCB)<br>
+          A E0200300130588589200001
+        </div>
+      </div>
+    </div>
+    
+    <!-- Executive Bar -->
+    <div class="executive-bar">
+      <div class="exec-cell">
+        Business Development Executive
+        <div class="exec-value">Zubair</div>
+      </div>
+      <div class="exec-cell">
+        DELIVERY DATE
+        <div class="exec-value">within 5 working days</div>
+      </div>
+      <div class="exec-cell">
+        PAYMENT TERMS
+        <div class="exec-value">COD</div>
+      </div>
+    </div>
+    
+    <!-- Items Table -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="no-column">NO</th>
+          <th class="description-column">DESCRIPTION</th>
+          <th class="qty-column">QTY</th>
+          <th class="price-column">UNIT PRICE</th>
+          <th class="total-column">LINE TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Row 1: Crystal clear transparent sticker -->
+        <tr class="filled-row">
+          <td>1</td>
+          <td class="description-cell">Crystal clear transparent sticker<br>Removal+Printing +Installation</td>
+          <td></td>
+          <td></td>
+          <td>6,000.00</td>
+        </tr>
+        
+        <!-- Row 2: Sticker Printing with Foam Board -->
+        <tr class="filled-row">
+          <td>2</td>
+          <td class="description-cell">Sticker Printing with Foam Board<br>and Installation</td>
+          <td></td>
+          <td></td>
+          <td>-</td>
+        </tr>
+        
+        <!-- Size rows -->
+        <tr class="filled-row">
+          <td></td>
+          <td class="description-cell">72cmx118.5cm</td>
+          <td>1</td>
+          <td>140.00</td>
+          <td>140.00</td>
+        </tr>
+        
+        <tr class="filled-row">
+          <td></td>
+          <td class="description-cell">63.5cmx67cm</td>
+          <td>1</td>
+          <td>75.00</td>
+          <td>75.00</td>
+        </tr>
+        
+        <tr class="filled-row">
+          <td></td>
+          <td class="description-cell">65cmx30cm</td>
+          <td>6</td>
+          <td>50.00</td>
+          <td>300.00</td>
+        </tr>
+        
+        <tr class="filled-row">
+          <td></td>
+          <td class="description-cell">22cmx 16cm</td>
+          <td>2</td>
+          <td>25.00</td>
+          <td>50.00</td>
+        </tr>
+        
+        <!-- Empty rows -->
+        {% for i in "123456789012" %}
+        <tr class="empty-row">
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    
+  </div>
+</body>
+</html>
